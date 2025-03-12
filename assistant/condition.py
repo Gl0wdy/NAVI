@@ -1,3 +1,4 @@
 class Condition:
     sleep = 'sleep'
-    active = 'active'
+    always_active = 'always_active'
+    command_active = 'command_active'

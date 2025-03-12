@@ -1,6 +1,8 @@
 import speech_recognition as sr
 import pyttsx3
+
 from mss import mss
+import webbrowser
 
 from g4f.client import Client
 from g4f.models import gigachat
@@ -12,40 +14,64 @@ import re
 import random
 
 
-with open('promt.txt', 'r', encoding='utf-8') as file:
+with open(r'NAVI\assistant\promt.txt', 'r', encoding='utf-8') as file:
     promt = file.read()
 
 
 class Assistant:
     def __init__(self):
-        self.condition = Condition.active
+        self.condition = Condition.always_active
         self._chat_history = [
             {"role": "system", "content": promt}
         ]
 
         self._voice_engine = pyttsx3.init()
-        self._voice_engine.setProperty('rate', 180)
+        self._voice_engine.setProperty('rate', 200)
         self._voice_engine.setProperty('volume', 0.9)
 
         self._client = Client()
         self._rec = sr.Recognizer()
 
-    def start(self):
+    def start(self, text_mode: bool = False):
+        if text_mode:
+            while (u_input := input('Request: ') != 'стоп'):
+                ai_resp = self.ai_request(u_input)
+                print(f'Response: {ai_resp}\n')
+                self.say(ai_resp)
+
         for text in self.listen():
-            if text and self.condition == Condition.active:
+            if text is not None and self.condition != Condition.sleep:
                 is_base = self.base_commands_checkout(text)
-                if not is_base:
+                if is_base == False:
                     print(f'Request: {text}')
                     ai_resp = self.ai_request(text)
                     if ai_resp:
                         print(f'Response: {ai_resp}\n')
                         self.say(ai_resp)
 
-    def base_commands_checkout(self, text):
-        match text.lower():
+    def base_commands_checkout(self, text: str):
+        if not text:
+            return
+        match text.split()[0].lower():
             case 'скрин' | 'скриншот':
                 with mss() as sct:
                     sct.shot()
+            case 'браузер':
+                webbrowser.open('https://google.com/')
+            case 'поиск' | 'найди':
+                text = '+'.join(text.split()[1:])
+                url = f'https://duckduckgo.com/?q={text}'
+                webbrowser.open(url)
+            case 'стоп' | 'спи':
+                self.condition = Condition.sleep
+                self.say('Отключаюсь.')
+            case 'режим диалога':
+                print('да')
+                self.condition = Condition.always_active
+                self.say('Режим диалога включен.')
+            case 'режим команд':
+                self.condition = Condition.command_active
+                self.say('Режим команд включен.')
             case _:
                 return False
 
@@ -77,23 +103,29 @@ class Assistant:
         
         ai_comments = local_scope.get('ai_comments', None)  
         if ai_comments is not None:
-            print(f'Response: {ai_comments}')
+            print(f'Response: {ai_comments}\n')
         else:
             print("No comments returned.")
 
     def listen(self):
         while True:
             with sr.Microphone() as source:
-                audio_text = self._rec.listen(source)
+                audio_text = self._rec.listen(source, timeout=10, phrase_time_limit=5)
+                
                 try:
-                    res = self._rec.recognize_vosk(audio_text)
+                    res = self._rec.recognize_vosk(audio_text, language='ru-RU')
                     text = json.loads(res)['text']
-                    if text in ('стоп', 'спи'):
-                        self.condition = Condition.sleep
-                    yield text
+                    if self.condition == Condition.always_active:
+                        yield text
+                        continue
+
+                    splited_text = text.split(maxsplit=1)
+                    if splited_text and (splited_text[0] == 'нави' and self.condition == Condition.command_active):
+                        yield text
 
                 except Exception as exc:
-                    print("Sorry, I did not get that")
+                    print(f"Sorry, I did not get that ({exc})")
+
 
     def say(self, text: str):
         self._voice_engine.say(text)
