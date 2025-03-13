@@ -5,14 +5,14 @@
 ❗ **WARNING!** NAVI may work incorrect because of development state of project. 
 
 ## Installation
-1. Clone repository:
+1. Clone repository:\
 ``` git clone https://github.com/Gl0wdy/NAVI.git```
 2. Install voice model from official [website](https://alphacephei.com/vosk/models) and unpack it on directory where you've cloned NAVI.
-3. Install requirements:
+3. Install requirements:\
 ```pip install requirements.txt```
 
 ## Usage
-1. Run main.py:
+1. Run main.py:\
 ```python main.py```
 2. Have fun.
 
