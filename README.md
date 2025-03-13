@@ -1,1 +1,3 @@
-The concept of an ultra-flexible assistant. needs to be improved and optimized. The project is on pause.
+# Ultra-flexible assistant - NAVI
+## Based on AI
+### Yeah it's inspired of Serial Experiments Lain
