@@ -12,6 +12,7 @@ from assistant.condition import Condition
 import json
 import re
 import random
+import os
 
 
 with open(r'NAVI\assistant\promt.txt', 'r', encoding='utf-8') as file:
@@ -19,11 +20,15 @@ with open(r'NAVI\assistant\promt.txt', 'r', encoding='utf-8') as file:
 
 
 class Assistant:
+
+    PATH = 'chat_history.json'
+
     def __init__(self):
         self.condition = Condition.always_active
         self._chat_history = [
             {"role": "system", "content": promt}
         ]
+        self._file = None
 
         self._voice_engine = pyttsx3.init()
         self._voice_engine.setProperty('rate', 200)
@@ -35,9 +40,9 @@ class Assistant:
     def start(self, text_mode: bool = False):
         if text_mode:
             while (u_input := input('Request: ') != 'стоп'):
+                print('Response: ', end='')
                 ai_resp = self.ai_request(u_input)
-                print(f'Response: {ai_resp}\n')
-                self.say(ai_resp)
+                print(ai_resp + '\n')
 
         for text in self.listen():
             if text is not None and self.condition != Condition.sleep:
@@ -82,10 +87,12 @@ class Assistant:
             messages=self._chat_history
         )
         ai_text = completion.choices[0].message.content
+        self.update_history(role="assistant", content=ai_text)
 
         blocks = self._find_text_blocks(ai_text)
         if blocks:
-            self.say('выполняю код...')
+            phrases = ['один момент...', 'секунду...', 'запрос принят.', 'выполняю код.']
+            self.say(random.choice(phrases))
             for code in blocks:
                 try:
                     self.execute(code)
@@ -93,7 +100,6 @@ class Assistant:
                     print(exc)
         else:
             return ai_text
-        self.update_history(role="assistant", content=ai_text)
 
     def execute(self, code):
         local_scope = {
@@ -103,14 +109,15 @@ class Assistant:
         
         ai_comments = local_scope.get('ai_comments', None)  
         if ai_comments is not None:
-            print(f'Response: {ai_comments}\n')
+            print(f'{ai_comments}\n')
+            self.update_history(role='assistant', content=ai_comments)
         else:
             print("No comments returned.")
 
     def listen(self):
         while True:
             with sr.Microphone() as source:
-                audio_text = self._rec.listen(source, timeout=10, phrase_time_limit=5)
+                audio_text = self._rec.listen(source, timeout=10, phrase_time_limit=10)
                 
                 try:
                     res = self._rec.recognize_vosk(audio_text, language='ru-RU')
@@ -126,14 +133,43 @@ class Assistant:
                 except Exception as exc:
                     print(f"Sorry, I did not get that ({exc})")
 
-
     def say(self, text: str):
-        self._voice_engine.say(text)
-        self._voice_engine.runAndWait()
+        sayable_text = ''.join(
+            (i for i in text
+             if i not in ':/\\*#')
+        )
 
-    def update_history(self, **kwargs):
-        self._chat_history.append(kwargs)
+        self._voice_engine.say(sayable_text)
+        self._voice_engine.runAndWait()
 
     def _find_text_blocks(self, text):
         code_blocks = re.findall(r'\[CODE\](.+)\[/CODE\]', text, re.DOTALL)
         return code_blocks
+
+    def update_history(self, **kwargs):
+        try:
+            self._file.seek(0)
+            existing_data = json.load(self._file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            existing_data = []
+
+        existing_data.append(kwargs)
+
+        self._file.seek(0) 
+        json.dump(existing_data, self._file, indent=4, ensure_ascii=False)
+        self._file.truncate()
+
+        self._chat_history.append(kwargs)
+    
+    def __enter__(self):
+        if not os.path.exists(self.PATH):
+            self._file = open(self.PATH, 'w+', encoding='utf-8')
+            json.dump([], self._file, ensure_ascii=False)
+        else:
+            self._file = open(self.PATH, 'r+', encoding='utf-8')
+            data = json.load(self._file)
+            self._chat_history.extend(data)
+        return self
+
+    def __exit__(self, *args):
+        self._file.close()
