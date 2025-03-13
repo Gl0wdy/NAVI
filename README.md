@@ -2,7 +2,15 @@
 
 ![Laingif](https://i.pinimg.com/originals/34/67/fc/3467fc8d0dd144536008b2fa04887b22.gif)
 
-❗ **WARNING!** NAVI may work incorrect because of development state of project. 
+❗ **WARNING!** NAVI may work incorrect because of development state of project. Also this is an experiment so use NAVI at your own risk.
+
+## How it works?
+In fact, the operating principle is simple - instead of commands written in advance in the code, an AI responds to voice requests, generating code to perform the assigned task.
+NAVI has access to all information on the computer and can perform any actions, including:
+- Manipulating files
+- Opening any program on PC
+- obtaining any system information to perform tasks
+- Literally anything you can imagine!
 
 ## Installation
 1. Clone repository:\
