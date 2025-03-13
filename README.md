@@ -5,7 +5,7 @@
 ❗ **WARNING!** NAVI may work incorrect because of development state of project. Also this is an experiment so use NAVI at your own risk.
 
 ## How it works?
-In fact, the operating principle is simple - instead of commands written in advance in the code, an AI responds to voice requests, generating code to perform the assigned task.
+In fact, the operating principle is simple - instead of commands written in advance in the code, an AI responds to voice requests, generating code and fulfills it to perform the assigned task.
 NAVI has access to all information on the computer and can perform any actions, including:
 - Manipulating files
 - Opening any program on PC
