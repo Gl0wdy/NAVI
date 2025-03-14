@@ -24,7 +24,7 @@ The operating principle is straightforward: instead of relying on predefined com
 2. Enjoy!
 
 ## Additional Information
-- AI Model: gpt-4o-mini (available for free with g4f)
-- Voice Model: Vosk
-- TTS model: bad...
+- AI Model: gpt-4o-mini ([with g4f](https://github.com/xtekky/gpt4free))
+- Voice recognizing Model: Vosk
+- TTS model: [SileroTTS](https://github.com/denisxab/speakerpy)
 - Future plans include adding a user interface and improving voice synthesis quality, among other enhancements...
