@@ -1,5 +1,5 @@
 import speech_recognition as sr
-import pyttsx3
+from speakerpy.lib_speak import Speaker
 
 from mss import mss
 import webbrowser
@@ -30,9 +30,7 @@ class Assistant:
         ]
         self._file = None
 
-        self._voice_engine = pyttsx3.init()
-        self._voice_engine.setProperty('rate', 200)
-        self._voice_engine.setProperty('volume', 0.9)
+        self._voice_engine = Speaker(model_id="ru_v3", language="ru", speaker="kseniya", device="cpu")
 
         self._client = Client()
         self._rec = sr.Recognizer()
@@ -48,11 +46,11 @@ class Assistant:
             if text is not None and self.condition != Condition.sleep:
                 is_base = self.base_commands_checkout(text)
                 if is_base == False:
-                    print(f'Request: {text}')
+                    print(f'>> {text}')
                     ai_resp = self.ai_request(text)
                     if ai_resp:
-                        print(f'Response: {ai_resp}\n')
                         self.say(ai_resp)
+                    print()
 
     def base_commands_checkout(self, text: str):
         if not text:
@@ -109,10 +107,7 @@ class Assistant:
         
         ai_comments = local_scope.get('ai_comments', None)  
         if ai_comments is not None:
-            print(f'{ai_comments}\n')
             self.update_history(role='assistant', content=ai_comments)
-        else:
-            print("No comments returned.")
 
     def listen(self):
         while True:
@@ -134,13 +129,7 @@ class Assistant:
                     print(f"Sorry, I did not get that ({exc})")
 
     def say(self, text: str):
-        sayable_text = ''.join(
-            (i for i in text
-             if i not in ':/\\*#')
-        )
-
-        self._voice_engine.say(sayable_text)
-        self._voice_engine.runAndWait()
+        self._voice_engine.speak(text=text, sample_rate=48000, speed=1.0)
 
     def _find_text_blocks(self, text):
         code_blocks = re.findall(r'\[CODE\](.+)\[/CODE\]', text, re.DOTALL)
