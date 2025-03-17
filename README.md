@@ -24,7 +24,7 @@ The operating principle is straightforward: instead of relying on predefined com
 2. Enjoy!
 
 ## Last update
-Basic interface & config file added. Also testing code caching system.
+Basic interface & settings added. Also testing code caching system to improve productivity.
 
 ## Additional Information
 - AI Model: gpt-4o-mini ([with g4f](https://github.com/xtekky/gpt4free))
