@@ -23,6 +23,9 @@ The operating principle is straightforward: instead of relying on predefined com
    ```python main.py```
 2. Enjoy!
 
+## Last update
+Basic interface & config file added. Also testing code caching system.
+
 ## Additional Information
 - AI Model: gpt-4o-mini ([with g4f](https://github.com/xtekky/gpt4free))
 - Voice recognizing Model: Vosk
