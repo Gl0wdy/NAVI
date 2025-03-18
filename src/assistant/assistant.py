@@ -1,12 +1,9 @@
 import speech_recognition as sr
 from speakerpy.lib_speak import Speaker
 
-from mss import mss
-import webbrowser
-
 from g4f.client import Client
 
-from ui.settings import get_config
+from utils.settings import get_config
 
 import json
 import re
@@ -108,11 +105,15 @@ class Assistant:
             {"role": "system", "content": CODE_EXAMPLES}
         ]
         self._file = None
-        self._voice_engine = Speaker(model_id="ru_v3", language="ru", speaker="kseniya", device="cpu")
+        self._voice_engine = Speaker(model_id=self.config['voice_model'], language=self.config['language'],
+                                     speaker=self.config['voice_model'],
+                                     device="cpu")
         self._client = Client()
         self._rec = sr.Recognizer()
 
     def start(self):
+        '''Starts main program cycle.'''
+
         if not os.path.exists(self.PATH):
             self._file = open(self.PATH, 'w+', encoding='utf-8')
             json.dump([], self._file, ensure_ascii=False)
@@ -138,6 +139,8 @@ class Assistant:
                     self.say(ai_resp)
 
     def ai_request(self, text: str):
+        '''Makes request to AI and executes code if blocks founded.'''
+
         self.update_history(role='user', content=text)
         completion = self._client.chat.completions.create(
             model='gpt-4o-mini',
@@ -146,7 +149,7 @@ class Assistant:
         ai_text = completion.choices[0].message.content
         self.update_history(role="assistant", content=ai_text)
 
-        blocks = self._find_text_blocks(ai_text)
+        blocks = self._find_code_blocks(ai_text)
         if blocks:
             phrases = ['один момент...', 'секунду...', 'запрос принят.', 'выполняю код.']
             self.say(random.choice(phrases))
@@ -159,6 +162,8 @@ class Assistant:
             return ai_text
 
     def execute(self, code, save=True):
+        '''Executing code and gets AI comments to display them.'''
+
         local_scope = {
             'self': self
         }
@@ -169,6 +174,8 @@ class Assistant:
             self.update_history(role='assistant', content=ai_comments)
 
     def listen(self):
+        '''Generator. Handle any voice and yields it.'''
+
         with sr.Microphone() as source:
             self._rec.adjust_for_ambient_noise(source)
             
@@ -185,14 +192,20 @@ class Assistant:
             self.say(ai_resp)
 
     def say(self, text: str):
+        '''Says text with SileroTTS.'''
+
         self.app.display_message(text, is_user=False)
         self._voice_engine.speak(text=text, sample_rate=48000, speed=1.0)
 
-    def _find_text_blocks(self, text):
+    def _find_code_blocks(self, text):
+        '''Searching code blocks in AI response.'''
+        
         code_blocks = re.findall(r'\[CODE\](.+)\[/CODE\]', text, re.DOTALL)
         return code_blocks
 
     def update_history(self, **kwargs):
+        '''Updates chat history. Writes data to chat_history.json.'''
+
         try:
             self._file.seek(0)
             existing_data = json.load(self._file)
@@ -208,12 +221,14 @@ class Assistant:
         self._chat_history.append(kwargs)
 
     def cache_checkout(self, text):
+        '''Returns code if similar request founded in chat history.'''
+
         history = iter(self._chat_history[1:])
         for msg in history:
             if msg['content'] == text:
                 response = next(history)
                 response_text = response['content']
-                if (code_blocks := self._find_text_blocks(response_text)):
+                if (code_blocks := self._find_code_blocks(response_text)):
                     for i in code_blocks:
                         self.execute(i, save=False)
                 return True

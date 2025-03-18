@@ -1,5 +1,6 @@
 from assistant import Assistant
-from . import settings
+from utils.tts import get_tts_models
+from utils import settings
 
 import customtkinter as ctk
 import tkinter as tk
@@ -8,7 +9,6 @@ from PIL import Image
 import threading
 import os
 import sys
-
 
 
 class SettingsWindow(ctk.CTkToplevel):
@@ -21,6 +21,8 @@ class SettingsWindow(ctk.CTkToplevel):
 
         self.wait_for_name_var = ctk.BooleanVar(value=config['wait_for_name'])
         self.use_cached_code_var = ctk.BooleanVar(value=config['use_cached_code'])
+        self.lang_var = ctk.StringVar(value=config['language'])
+        self.tts_model_var = ctk.StringVar(value=config['voice_model'])
 
         self.wait_for_name_checkbox = ctk.CTkCheckBox(
             self, 
@@ -36,13 +38,31 @@ class SettingsWindow(ctk.CTkToplevel):
         )
         self.use_cached_code_checkbox.pack(pady=10)
 
+        models_data = get_tts_models()
+        self.model_combobox = ctk.CTkComboBox(
+            self,
+            values=models_data[self.lang_var.get()],
+            variable=self.tts_model_var
+        )
+        self.model_combobox.pack(pady=10)
+
+        self.language_combobox = ctk.CTkComboBox(
+            self,
+            values=list(models_data.keys()),
+            variable=self.lang_var,
+            command=lambda _: self.model_combobox.__setattr__('values', models_data[self.lang_var.get()],)
+        )
+        self.language_combobox.pack(pady=10)
+
         self.apply_button = ctk.CTkButton(self, text="Apply", command=self.apply_changes)
         self.apply_button.pack(pady=20)
 
     def apply_changes(self):
         settings.update_config(
             use_cached_code=self.use_cached_code_checkbox.get(),
-            wait_for_name=self.wait_for_name_checkbox.get()
+            wait_for_name=self.wait_for_name_checkbox.get(),
+            language=self.language_combobox.get(),
+            voice_model=self.model_combobox.get()
         )
         self.master.destroy()
         os.execv(sys.executable, ['python'] + sys.argv)

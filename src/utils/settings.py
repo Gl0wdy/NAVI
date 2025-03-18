@@ -5,7 +5,12 @@ import json
 def get_config():
     if not os.path.exists('config.json'):
         with open('config.json', 'w') as file:
-            data = {'wait_for_name': False, 'use_cached_code': True}
+            data = {
+                'wait_for_name': False,
+                'use_cached_code': True,
+                'language': 'ru',
+                'voice_model': 'ru_v3'
+            }
             json.dump(
                 data,
                 file, indent=4
