@@ -106,7 +106,7 @@ class Assistant:
         ]
         self._file = None
         self._voice_engine = Speaker(model_id=self.config['voice_model'], language=self.config['language'],
-                                     speaker=self.config['voice_model'],
+                                     speaker='kseniya',
                                      device="cpu")
         self._client = Client()
         self._rec = sr.Recognizer()
